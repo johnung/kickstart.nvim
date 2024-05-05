@@ -91,7 +91,7 @@ vim.g.mapleader = ' '
 vim.g.maplocalleader = ' '
 
 -- Set to true if you have a Nerd Font installed and selected in the terminal
-vim.g.have_nerd_font = false
+vim.g.have_nerd_font = true
 
 -- [[ Setting options ]]
 -- See `:help vim.opt`
@@ -174,12 +174,6 @@ vim.keymap.set('n', '<leader>q', vim.diagnostic.setloclist, { desc = 'Open diagn
 -- NOTE: This won't work in all terminal emulators/tmux/etc. Try your own mapping
 -- or just use <C-\><C-n> to exit terminal mode
 vim.keymap.set('t', '<Esc><Esc>', '<C-\\><C-n>', { desc = 'Exit terminal mode' })
-
--- TIP: Disable arrow keys in normal mode
--- vim.keymap.set('n', '<left>', '<cmd>echo "Use h to move!!"<CR>')
--- vim.keymap.set('n', '<right>', '<cmd>echo "Use l to move!!"<CR>')
--- vim.keymap.set('n', '<up>', '<cmd>echo "Use k to move!!"<CR>')
--- vim.keymap.set('n', '<down>', '<cmd>echo "Use j to move!!"<CR>')
 
 -- Keybinds to make split navigation easier.
 --  Use CTRL+<hjkl> to switch between windows
@@ -548,6 +542,82 @@ require('lazy').setup({
         end,
       })
 
+      -- Prep work for making the ruby_lsp work
+      -- textDocument/diagnostic support until 0.10.0 is released
+      _timers = {}
+      local function setup_diagnostics(client, buffer)
+        if require('vim.lsp.diagnostic')._enable then
+          return
+        end
+
+        local diagnostic_handler = function()
+          local params = vim.lsp.util.make_text_document_params(buffer)
+          client.request('textDocument/diagnostic', { textDocument = params }, function(err, result)
+            if err then
+              local err_msg = string.format('diagnostics error - %s', vim.inspect(err))
+              vim.lsp.log.error(err_msg)
+            end
+            local diagnostic_items = {}
+            if result then
+              diagnostic_items = result.items
+            end
+            vim.lsp.diagnostic.on_publish_diagnostics(nil, vim.tbl_extend('keep', params, { diagnostics = diagnostic_items }), { client_id = client.id })
+          end)
+        end
+
+        diagnostic_handler() -- to request diagnostics on buffer when first attaching
+
+        vim.api.nvim_buf_attach(buffer, false, {
+          on_lines = function()
+            if _timers[buffer] then
+              vim.fn.timer_stop(_timers[buffer])
+            end
+            _timers[buffer] = vim.fn.timer_start(200, diagnostic_handler)
+          end,
+          on_detach = function()
+            if _timers[buffer] then
+              vim.fn.timer_stop(_timers[buffer])
+            end
+          end,
+        })
+      end
+
+      -- adds ShowRubyDeps command to show dependencies in the quickfix list.
+      -- add the `all` argument to show indirect dependencies as well
+      local function add_ruby_deps_command(client, bufnr)
+        vim.api.nvim_buf_create_user_command(bufnr, 'ShowRubyDeps', function(opts)
+          local params = vim.lsp.util.make_text_document_params()
+
+          local showAll = opts.args == 'all'
+
+          client.request('rubyLsp/workspace/dependencies', params, function(error, result)
+            if error then
+              print('Error showing deps: ' .. error)
+              return
+            end
+
+            local qf_list = {}
+            for _, item in ipairs(result) do
+              if showAll or item.dependency then
+                table.insert(qf_list, {
+                  text = string.format('%s (%s) - %s', item.name, item.version, item.dependency),
+
+                  filename = item.path,
+                })
+              end
+            end
+
+            vim.fn.setqflist(qf_list)
+            vim.cmd 'copen'
+          end, bufnr)
+        end, {
+          nargs = '?',
+          complete = function()
+            return { 'all' }
+          end,
+        })
+      end
+
       -- LSP servers and clients are able to communicate to each other what features they support.
       --  By default, Neovim doesn't support everything that is in the LSP specification.
       --  When you add nvim-cmp, luasnip, etc. Neovim now has *more* capabilities.
@@ -566,7 +636,7 @@ require('lazy').setup({
       --        For example, to see the options for `lua_ls`, you could go to: https://luals.github.io/wiki/settings/
       local servers = {
         -- clangd = {},
-        -- gopls = {},
+        gopls = {},
         -- pyright = {},
         -- rust_analyzer = {},
         -- ... etc. See `:help lspconfig-all` for a list of all the pre-configured LSPs
@@ -591,6 +661,12 @@ require('lazy').setup({
               -- diagnostics = { disable = { 'missing-fields' } },
             },
           },
+        },
+        ruby_lsp = {
+          on_attach = function(client, buffer)
+            setup_diagnostics(client, buffer)
+            add_ruby_deps_command(client, buffer)
+          end,
         },
       }
 
@@ -657,7 +733,8 @@ require('lazy').setup({
         --
         -- You can use a sub-list to tell conform to run *until* a formatter
         -- is found.
-        -- javascript = { { "prettierd", "prettier" } },
+        javascript = { { 'prettier' } },
+        vue = { { 'prettier' } },
       },
     },
   },
@@ -885,7 +962,7 @@ require('lazy').setup({
   --
   --  Uncomment the following line and add your plugins to `lua/custom/plugins/*.lua` to get going.
   --    For additional information, see `:help lazy.nvim-lazy.nvim-structuring-your-plugins`
-  -- { import = 'custom.plugins' },
+  { import = 'custom.plugins' },
 }, {
   ui = {
     -- If you are using a Nerd Font: set icons to an empty table which will use the
