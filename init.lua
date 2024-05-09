@@ -668,6 +668,7 @@ require('lazy').setup({
             add_ruby_deps_command(client, buffer)
           end,
         },
+        vuels = {},
       }
 
       -- Ensure the servers and tools above are installed
