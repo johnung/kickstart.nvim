@@ -231,10 +231,9 @@ require('lazy').setup({
   -- Use `opts = {}` to force a plugin to be loaded.
   --
   --  This is equivalent to:
-  --    require('Comment').setup({})
+  --    require('plugin-name').setup({})
 
-  -- "gc" to comment visual regions/lines
-  { 'numToStr/Comment.nvim', opts = {} },
+  -- NOTE: "gc" to comment visual regions/lines is built into Neovim 0.10+. See `:help commenting`
 
   -- Here is a more advanced example where we pass configuration
   -- options to `gitsigns.nvim`. This is equivalent to the following Lua:
