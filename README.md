@@ -63,22 +63,6 @@ Lua (lua_ls, stylua), and JavaScript/Vue formatting (prettier).
 
    Errors matter. Most warnings don't (e.g. missing Java/PHP toolchains in the Mason section).
 
-## Updating a machine that has an older version of this config
-
-For example, a machine last set up in 2024 or 2025. The plugin setup changed a lot, so start
-from a clean plugin install rather than updating in place:
-
-```sh
-brew upgrade neovim               # needs 0.12 or newer: check with `nvim --version`
-brew install tree-sitter-cli
-cd ~/.config/nvim && git pull
-rm -rf ~/.local/share/nvim/lazy   # old plugin installs; reinstalled on next launch
-nvim
-```
-
-Deleting `~/.local/share/nvim/lazy` only removes downloaded plugins. Mason tools, harpoon
-marks, and undo history live elsewhere and are kept. Then run `:checkhealth`.
-
 ## Keeping plugins up to date
 
 - `:Lazy update` updates plugins and rewrites `lazy-lock.json`. Commit the lockfile so other
