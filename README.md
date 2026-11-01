@@ -50,7 +50,10 @@ Lua (lua_ls, stylua), and JavaScript/Vue formatting (prettier).
 
    On first launch, lazy.nvim installs plugins at the versions pinned in `lazy-lock.json`,
    Mason installs language servers and formatters, and ts-install builds syntax parsers.
-   This takes a few minutes and runs in the background. Restart Neovim once it settles.
+   This takes several minutes (Mason is the slow part) and runs in the background.
+   When it settles, **quit and start Neovim a second time**: on a fresh machine ts-install
+   usually builds only some parsers on the first launch (it hits a race and logs
+   `EEXIST ... ts-install/queries` errors) and finishes the rest on the next start.
 
 6. **Check that everything is healthy:**
 
