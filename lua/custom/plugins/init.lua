@@ -8,6 +8,9 @@ vim.api.nvim_create_autocmd('BufWritePre', {
   group = vim.api.nvim_create_augroup('custom-strip-whitespace', { clear = true }),
   pattern = '*',
   callback = function()
+    if not vim.bo.modifiable then
+      return
+    end
     local view = vim.fn.winsaveview()
     vim.cmd [[keeppatterns %s/\s\+$//e]]
     vim.fn.winrestview(view)
