@@ -1,4 +1,107 @@
-# kickstart.nvim
+# My Neovim config
+
+A personal fork of [kickstart.nvim](https://github.com/nvim-lua/kickstart.nvim), kept current with
+**Neovim 0.12+**. The upstream kickstart README is preserved further down for reference.
+
+Languages set up out of the box: Ruby (ruby-lsp), Python (pylsp, black, isort), Go (gopls),
+Lua (lua_ls, stylua), and JavaScript/Vue formatting (prettier).
+
+## Setting up a new Mac
+
+1. **Install the command line tools** (C compiler, `make`, `git`, `curl`):
+
+   ```sh
+   xcode-select --install
+   ```
+
+2. **Install Neovim and the tools the config depends on:**
+
+   ```sh
+   brew install neovim ripgrep fd tree-sitter-cli
+   brew install --cask font-fira-code-nerd-font
+   ```
+
+   - `tree-sitter-cli` is required: nvim-treesitter builds syntax parsers with it.
+   - Set your terminal's font to **FiraCode Nerd Font**, or icons show up as boxes.
+
+3. **Install the language runtimes Mason needs** to install language servers:
+
+   | Runtime | Needed for |
+   |---|---|
+   | Node.js / npm | prettier |
+   | Python 3 (ships with macOS) | pylsp, black, isort |
+   | Ruby 3+ (e.g. via rvm or rbenv) | ruby-lsp |
+   | Go | gopls |
+
+   Skip any language you don't use. Mason just reports that tool as failed.
+
+4. **Clone this repo into place.** Back up any existing config first:
+
+   ```sh
+   mv ~/.config/nvim ~/.config/nvim.bak 2>/dev/null
+   git clone git@github.com:johnung/kickstart.nvim.git ~/.config/nvim
+   ```
+
+5. **Start Neovim and let it install everything:**
+
+   ```sh
+   nvim
+   ```
+
+   On first launch, lazy.nvim installs plugins at the versions pinned in `lazy-lock.json`,
+   Mason installs language servers and formatters, and ts-install builds syntax parsers.
+   This takes a few minutes and runs in the background. Restart Neovim once it settles.
+
+6. **Check that everything is healthy:**
+
+   ```vim
+   :checkhealth
+   ```
+
+   Errors matter. Most warnings don't (e.g. missing Java/PHP toolchains in the Mason section).
+
+## Updating a machine that has an older version of this config
+
+For example, a machine last set up in 2024 or 2025. The plugin setup changed a lot, so start
+from a clean plugin install rather than updating in place:
+
+```sh
+brew upgrade neovim               # needs 0.12 or newer: check with `nvim --version`
+brew install tree-sitter-cli
+cd ~/.config/nvim && git pull
+rm -rf ~/.local/share/nvim/lazy   # old plugin installs; reinstalled on next launch
+nvim
+```
+
+Deleting `~/.local/share/nvim/lazy` only removes downloaded plugins. Mason tools, harpoon
+marks, and undo history live elsewhere and are kept. Then run `:checkhealth`.
+
+## Keeping plugins up to date
+
+- `:Lazy update` updates plugins and rewrites `lazy-lock.json`. Commit the lockfile so other
+  machines get the same versions.
+- If an update breaks something, roll back with:
+
+  ```sh
+  git checkout lazy-lock.json
+  ```
+
+  then run `:Lazy restore` in Neovim.
+- Update a few plugins at a time and check `:checkhealth vim.deprecated` afterward.
+  Plugin updates can change or remove options without any warning.
+
+## Known quirks
+
+- **Format-on-save gives up silently after 500ms.** If a save doesn't format, the formatter
+  may have been slow (black's first run usually is). Format by hand with `<Space>f`.
+- **`:TS uninstall <lang>` leaves query files behind**, which makes `:checkhealth ts-install`
+  report errors. Delete `~/.local/share/nvim/ts-install/queries/<lang>` by hand.
+- **Ruby projects using rubocop-rails-omakase** show few diagnostics, because omakase turns off
+  most lint cops. That doesn't mean the LSP is broken.
+
+---
+
+# kickstart.nvim (upstream README)
 
 ## Introduction
 
