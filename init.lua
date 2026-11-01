@@ -182,16 +182,14 @@ vim.diagnostic.config {
       [vim.diagnostic.severity.HINT] = '󰌶 ',
     },
   } or {},
+  -- Inline messages on every line except the cursor line...
   virtual_text = {
     source = 'if_many',
     spacing = 2,
+    current_line = false,
   },
-  -- Show the message in a float when jumping with the built-in [d / ]d keymaps
-  jump = {
-    on_jump = function(_, bufnr)
-      vim.diagnostic.open_float { bufnr = bufnr, scope = 'cursor', focus = false }
-    end,
-  },
+  -- ...where the full message is shown on its own lines underneath instead
+  virtual_lines = { current_line = true },
 }
 
 -- Diagnostic keymaps
