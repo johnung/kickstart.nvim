@@ -543,7 +543,10 @@ require('lazy').setup({
         group = vim.api.nvim_create_augroup('kickstart-lsp-detach', { clear = true }),
         callback = function(event)
           vim.lsp.buf.clear_references()
-          vim.api.nvim_clear_autocmds { group = 'kickstart-lsp-highlight', buffer = event.buf }
+          -- The group only exists once a server with documentHighlight has attached,
+          -- so create it (without clearing) before clearing this buffer's autocmds
+          local highlight_augroup = vim.api.nvim_create_augroup('kickstart-lsp-highlight', { clear = false })
+          vim.api.nvim_clear_autocmds { group = highlight_augroup, buffer = event.buf }
         end,
       })
 
