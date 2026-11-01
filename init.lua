@@ -691,17 +691,20 @@ require('lazy').setup({
       })
       require('mason-tool-installer').setup { ensure_installed = ensure_installed }
 
+      -- Every server gets the extra capabilities (from nvim-cmp) by default
+      vim.lsp.config('*', { capabilities = capabilities })
+
+      -- Per-server overrides from the `servers` table above. These merge on top of
+      -- the defaults that nvim-lspconfig ships, so only explicitly passed values change.
+      for server_name, server in pairs(servers) do
+        vim.lsp.config(server_name, server)
+      end
+
+      -- mason-lspconfig enables every Mason-installed server automatically.
+      -- rubocop is excluded because ruby_lsp already runs it, and stylua because
+      -- it's only used as a formatter (via conform), not as a language server.
       require('mason-lspconfig').setup {
-        handlers = {
-          function(server_name)
-            local server = servers[server_name] or {}
-            -- This handles overriding only values explicitly passed
-            -- by the server configuration above. Useful when disabling
-            -- certain features of an LSP (for example, turning off formatting for tsserver)
-            server.capabilities = vim.tbl_deep_extend('force', {}, capabilities, server.capabilities or {})
-            require('lspconfig')[server_name].setup(server)
-          end,
-        },
+        automatic_enable = { exclude = { 'rubocop', 'stylua' } },
       }
     end,
   },
