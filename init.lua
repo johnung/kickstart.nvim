@@ -914,6 +914,10 @@ require('lazy').setup({
     config = function()
       -- [[ Configure Treesitter ]] See `:help nvim-treesitter`
 
+      -- Parsers live in ts-install's directory; point nvim-treesitter there too so that
+      -- `:checkhealth nvim-treesitter` checks the right place
+      require('nvim-treesitter').setup { install_dir = vim.fn.stdpath 'data' .. '/ts-install' }
+
       -- Some languages depend on vim's regex highlighting system (such as Ruby) for indent rules.
       --  If you are experiencing weird indenting issues, add the language to this list.
       local regex_indent_languages = { ruby = true }
