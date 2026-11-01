@@ -302,7 +302,7 @@ require('lazy').setup({
     opts = {
       -- Document existing key chains
       spec = {
-        { '<leader>d', group = '[D]ocument' },
+        { '<leader>d', group = '[D]atabase' },
         { '<leader>s', group = '[S]earch' },
         { '<leader>t', group = '[T]oggle' },
         { 'gr', group = 'LSP Actions' },
